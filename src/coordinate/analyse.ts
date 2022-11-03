@@ -52,8 +52,7 @@ export async function main(ns : NS) : Promise<void> {
         const grows: Grow[] = []
         const hacks: Hack[] = []
         
-        const wa = ns.weakenAnalyze(1)
-        for (let i = 0; i < hackable.length; i++) {
+       for (let i = 0; i < hackable.length; i++) {
             const server = hackable[i]
             const hostname = server.hostname
             const money = server.moneyAvailable
