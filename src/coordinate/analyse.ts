@@ -18,9 +18,12 @@ export async function main(ns : NS) : Promise<void> {
 
     interface Hack {
         hostname: string;
+        earnings: number;
+        hackFraction: number;
+        hackThreads: number;
         hackAmount: number;
         hackTime: number;
-        hackForSure: number;
+        security: number[];
     }
 
     type Action = Grow | Hack
@@ -58,40 +61,51 @@ export async function main(ns : NS) : Promise<void> {
             const money = server.moneyAvailable
             const moneyMax = server.moneyMax
     
-            if (server.moneyAvailable / moneyMax < 0.5) {
-                const threadsToDouble = ns.growthAnalyze(hostname, 2)
-                const growTime = ns.getGrowTime(hostname)
-                const growTimeWithCapacity = growTime * threadsToDouble / capacity.totalThreads / 1000 / 60
-                // we are going to grow by doubling, pure earnings is exactly the amount
-                const earnings = server.moneyAvailable / growTimeWithCapacity 
-        
-                const action: Grow = {
-                    hostname: server.hostname,
-                    growTimeWithCapacity: growTimeWithCapacity,
-                    moneyAvailable: server.moneyAvailable,
-                    earnings: earnings
-                }
-                grows.push(action)
-            } else {
-                const hackFraction = ns.hackAnalyze(hostname)
-                const hackAmount = hackFraction*money
-                const hackTime = ns.getHackTime(hostname)/1000/60
-                const hackChance = ns.hackAnalyzeChance(hostname)
-                const hackForSure = hackAmount * hackChance
+            const threadsToDouble = ns.growthAnalyze(hostname, 2)
+            const growTime = ns.getGrowTime(hostname)
+            const growTimeWithCapacity = growTime * threadsToDouble / capacity.totalThreads / 1000 / 60
+            // we are going to grow by doubling, pure earnings is exactly the amount
+            const earnings = server.moneyAvailable / growTimeWithCapacity 
     
-                const action: Hack = { 
+            const growAction: Grow = {
+                hostname: server.hostname,
+                growTimeWithCapacity: growTimeWithCapacity,
+                moneyAvailable: server.moneyAvailable,
+                earnings: earnings
+            }
+            grows.push(growAction)
+
+            const hackFraction = ns.hackAnalyze(hostname)
+            if (hackFraction < 0.5 && hackFraction > 0.0) {
+                // we are too powerful for this server
+                // we only looking into to getting up to a half of money
+                // why? because we want to grow in one run by 2x if possible
+                const hackThreads = 0.5 / hackFraction
+                const hackAmount = server.moneyAvailable * hackFraction * hackThreads
+                
+                const hackTime = ns.getHackTime(hostname)/1000/60
+                const earnings = hackAmount / hackTime
+                const security = [
+                    ns.getServerMinSecurityLevel(hostname),
+                    ns.getServerSecurityLevel(hostname)
+                ]
+
+                const hackAction: Hack = { 
                     hostname: server.hostname,
+                    earnings: earnings,
+                    hackFraction: hackFraction,
+                    hackThreads: hackThreads,
                     hackAmount: hackAmount,
                     hackTime: hackTime,
-                    hackForSure: hackForSure
+                    security: security
                 }
-                hacks.push(action)
-    
+                hacks.push(hackAction)
             }
+
         }
         grows.sort((a, b) => -(a.earnings - b.earnings))
         grows.forEach((g) => console.log(g))
-        hacks.sort((a, b) => -(a.hackForSure - b.hackForSure))
+        hacks.sort((a, b) => -(a.earnings - b.earnings))
         hacks.forEach((g) => console.log(g))
         return []
     }
