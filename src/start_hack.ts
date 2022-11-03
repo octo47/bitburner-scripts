@@ -6,6 +6,8 @@ export async function main(ns : NS) : Promise<void> {
     while (true) {
         const hostPaths: HostData[] = HostList.load(ns).hosts
     
+        const hackingSkill = ns.getPlayer().skills.hacking
+
         for (const idx in hostPaths) {
             const hostPath = hostPaths[idx]
             if (hostPath.hacked) {
@@ -16,7 +18,7 @@ export async function main(ns : NS) : Promise<void> {
                 }
 
                 const server = ns.getServer(hostPath.hostname)
-                if (server.purchasedByPlayer) {
+                if (server.purchasedByPlayer || server.requiredHackingSkill > hackingSkill) {
                     continue
                 }
                 const serverRam = server.maxRam

@@ -6,16 +6,14 @@ export class HostData {
     hostname: string
     path: string[]
     hacked: boolean
-    maxMoney: number
-    contracts: string[]
+    owned: boolean
 
-    constructor(hostname: string, path: string[], hacked: boolean, maxMoney: number, contracts: string[] = []) {
+    constructor(hostname: string, path: string[], hacked: boolean, owned: boolean) {
         this.hostname = hostname
         this.path = path
         this.hacked = hacked
-        this.maxMoney = maxMoney
-        this.contracts = contracts
-    }
+        this.owned = owned
+   }
 }
 
 export class HostList {

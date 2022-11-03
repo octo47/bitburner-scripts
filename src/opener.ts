@@ -9,15 +9,24 @@ export async function main(ns : NS) : Promise<void> {
 
         const toHack= hosts.filtered((elem) => elem.hacked == false)
 
+        const hackingLevel = ns.getPlayer().skills.hacking
         let hacked = false
         const po = new PortOpener(ns)
         for (const idx in toHack) {
             const hostPath = toHack[idx]
             if (hostPath.hacked) {
-                console.log("%s already rooted", hostPath.hostname)
                 continue
             }
+
             const server = ns.getServer(hostPath.hostname)
+
+            if (server.requiredHackingSkill > hackingLevel) {
+                console.log("%s TOO WEAK: %d < %d", 
+                    server.hostname, hackingLevel, 
+                    server.requiredHackingSkill)
+                continue
+            }
+
             if (po.open(server)) {
                 ns.nuke(hostPath.hostname)
                 if (ns.getServer(hostPath.hostname).hasAdminRights) {
