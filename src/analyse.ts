@@ -1,13 +1,8 @@
 import { NS, Server } from '@ns'
+import { Capacity } from './coordinate/capacity'
 import { Scanner } from '/lib/scanner.js'
 
 export async function main(ns : NS) : Promise<void> {
-
-    interface Capacity {
-        totalRam: number;
-        totalThreads: number;
-        scriptRam: number;
-    }
 
     interface Grow {
         hostname: string;
@@ -28,25 +23,6 @@ export async function main(ns : NS) : Promise<void> {
 
     type Action = Grow | Hack
 
-    function analyseCapacity(servers: Server[]): Capacity {
-        const workers = servers.filter((el) => { 
-            return el.hasAdminRights
-        })
-
-        const totalRam = workers.map((server) => server.maxRam).reduce((accum, val) => accum + val, 0)
-        const scriptRam = ns.getScriptRam("/worker/hack.js", "home")
-        const totalThreads = totalRam / scriptRam
-
-        const capacity = {
-            totalRam: totalRam,
-            totalThreads: totalThreads,
-            scriptRam: scriptRam
-        }
-
-        console.log(capacity)
-        return capacity
-    }
-
     function analyseHacking(servers: Server[], capacity: Capacity): Action[] {
         const hackable = servers.filter((el) => { 
             return el.hasAdminRights && el.moneyMax > 0
@@ -58,8 +34,6 @@ export async function main(ns : NS) : Promise<void> {
        for (let i = 0; i < hackable.length; i++) {
             const server = hackable[i]
             const hostname = server.hostname
-            const money = server.moneyAvailable
-            const moneyMax = server.moneyMax
     
             const threadsToDouble = ns.growthAnalyze(hostname, 2)
             const growTime = ns.getGrowTime(hostname)
@@ -116,7 +90,7 @@ export async function main(ns : NS) : Promise<void> {
         .map((item) => ns.getServer(item.hostname))
 
 
-    const capacity = analyseCapacity(servers)
+    const capacity = new Capacity(ns, servers)
     analyseHacking(servers, capacity)
 
 

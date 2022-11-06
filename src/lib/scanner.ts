@@ -1,6 +1,6 @@
 import { NS } from '@ns'
 import { Queue } from 'lib/queue'
-import { HostData, HostList } from '/lib/hostdata.js'
+import { HostData, HostList } from 'lib/hostdata.js'
 
 export class Scanner {
 
