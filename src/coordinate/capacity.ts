@@ -11,7 +11,7 @@ export class Capacity {
 
     constructor(ns: NS, servers: Server[]) {
         this.totalThreads = 0
-        const scriptRam = ns.getScriptRam("/worker/hack.js", "home")
+        const scriptRam = 2
         servers.forEach((worker) => {
             if (worker.hasAdminRights && worker.maxRam > 0) {
                 const threads = Math.floor(worker.maxRam / scriptRam)
