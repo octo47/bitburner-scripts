@@ -20,8 +20,8 @@ export class Capacity {
             }
         })
 
-        this.growThreadsMax  = this.totalThreads * 0.2
-        this.hackThreadsMax = this.totalThreads * 0.6
-        this.weakenThreadsMax = this.totalThreads * 0.2
+        this.growThreadsMax  = Math.floor(this.totalThreads * 0.2)
+        this.hackThreadsMax = Math.floor(this.totalThreads * 0.6)
+        this.weakenThreadsMax = Math.floor(this.totalThreads * 0.2)
     }
 }

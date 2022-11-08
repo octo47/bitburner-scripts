@@ -1,7 +1,8 @@
 import { Capacity } from 'coordinate/capacity' 
 
 export enum WorkType {
-    hacking = 0,
+    any,
+    hacking,
     weaking,
     growing 
 }
@@ -13,9 +14,9 @@ export interface Allocation {
     threads: number;
 }
 
-const workerGrow = "worker/grow.js"
-const workerHack = "worker/hack.js"
-const workerWeaken = "worker/weaken.js"
+const workerGrow = "/worker/grow.js"
+const workerHack = "/worker/hack.js"
+const workerWeaken = "/worker/weaken.js"
 
 
 export class Allocator {
@@ -24,6 +25,15 @@ export class Allocator {
 
     constructor(capacity: Capacity) {
         this.capacity = capacity
+    }
+
+    freeCapacity(): number {
+        let reminder = 0
+
+        this.capacity.workers.forEach(val => {
+            reminder += val
+        })
+        return reminder
     }
 
     allocate(type: WorkType, maxThreads: number, target: string): Allocation[] {
@@ -85,6 +95,7 @@ export class Allocator {
             case WorkType.hacking: return workerHack
             case WorkType.growing: return workerGrow
             case WorkType.weaking: return workerWeaken
+            default: return ""
         }
     }
 

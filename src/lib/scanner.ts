@@ -37,6 +37,6 @@ export class Scanner {
                     false)
             }))
         } while (!toScan.isEmpty())
-        return new HostList(hosts)
+        return new HostList(hosts.filter((elem) => elem.hostname !== "home"))
     }
 }
