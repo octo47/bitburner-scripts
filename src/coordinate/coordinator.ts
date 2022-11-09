@@ -2,7 +2,6 @@ import { NS, ProcessInfo, Server } from '@ns'
 import { Scanner } from 'lib/scanner.js'
 import { Allocator, Allocation, WorkType } from 'coordinate/allocator.js'
 import { Grow, Hack, Weaken } from 'coordinate/types.js'
-import { words } from 'lodash'
 
 
 const debug = true
