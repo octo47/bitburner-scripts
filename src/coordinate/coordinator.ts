@@ -37,7 +37,7 @@ export class Coordinator {
             } as Grow
         })
 
-        inOrder.sort((a, b) => b.earnings - a.earnings)
+        inOrder.sort((a, b) => a.threads - b.threads)
         console.log({
             growing: inOrder
         })
