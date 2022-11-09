@@ -1,9 +1,8 @@
 
 export interface Grow {
     hostname: string;
-    growTimeWithCapacity: number;
     threads: number;
-    moneyAvailable: number;
+    growTime: number;
     earnings: number;
 }
 
@@ -14,6 +13,15 @@ export interface Hack {
     hackThreads: number;
     hackAmount: number;
     hackTime: number;
+    security: number[];
+}
+
+export interface Weaken {
+    hostname: string;
+    amount: number;
+    threads: number;
+    time: number;
+    perMinue: number;
     security: number[];
 }
 

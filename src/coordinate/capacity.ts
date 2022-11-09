@@ -11,7 +11,7 @@ export class Capacity {
 
     constructor(ns: NS, servers: Server[]) {
         this.totalThreads = 0
-        const scriptRam = 2
+        const scriptRam = 1.8
         servers.forEach((worker) => {
             if (worker.hasAdminRights && worker.maxRam > 0) {
                 const threads = Math.floor(worker.maxRam / scriptRam)
@@ -20,7 +20,7 @@ export class Capacity {
             }
         })
 
-        this.growThreadsMax  = Math.floor(this.totalThreads * 0.2)
+        this.growThreadsMax = Math.floor(this.totalThreads * 0.2)
         this.hackThreadsMax = Math.floor(this.totalThreads * 0.6)
         this.weakenThreadsMax = Math.floor(this.totalThreads * 0.2)
     }

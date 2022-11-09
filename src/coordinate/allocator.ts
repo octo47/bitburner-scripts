@@ -1,4 +1,5 @@
 import { Capacity } from 'coordinate/capacity' 
+import { NS, Server } from '/../NetscriptDefinitions.js'
 
 export enum WorkType {
     any,
@@ -23,8 +24,9 @@ export class Allocator {
 
     capacity: Capacity
 
-    constructor(capacity: Capacity) {
-        this.capacity = capacity
+    constructor(ns: NS, workers: Server[]) {
+        this.capacity = new Capacity(ns, workers)
+
     }
 
     freeCapacity(): number {
@@ -44,19 +46,25 @@ export class Allocator {
         if (!toAllocate) {
             return allocations
         }
-        console.log("Allocating %s for %s: maxThreads=%d => %d", this.scriptName(type), target, maxThreads, toAllocate)
+        //console.log("Allocating %s for %s: maxThreads=%d => %d", this.scriptName(type), target, maxThreads, toAllocate)
 
         for (const entry of Array.from(this.capacity.workers.entries())) {
             const hostname = entry[0]
             const available = entry[1]
-
-            if (!available) {
-                this.capacity.workers.delete(hostname)
-                continue
+            
+            if (toAllocate == 0) {
+                break
             }
+
             const allocated = Math.min(available, toAllocate)
-            this.capacity.workers.set(hostname, available - allocated)
+            const leftover = available - allocated
+            if (leftover > 0) {
+                this.capacity.workers.set(hostname, leftover)
+            } else {
+                this.capacity.workers.delete(hostname)
+            }
             toAllocate -= allocated
+            //console.log("Allocating threads for %s on %s: %d, capacity:%s", target, hostname, allocated, JSON.stringify(this.capacity))
             this.allocateThreads(type, allocated)
 
             allocations.push({
@@ -66,35 +74,32 @@ export class Allocator {
                 threads: allocated
             } as Allocation)
 
-            if (toAllocate == 0) {
-                break
-            }
         }
         return allocations
     }
 
     private availableThreads(type: WorkType, maxThreads: number): number | undefined {
         switch(type) {
-            case WorkType.hacking: return Math.min(this.capacity.hackThreadsMax, Math.floor(maxThreads))
-            case WorkType.growing: return Math.min(this.capacity.growThreadsMax, Math.floor(maxThreads))
-            case WorkType.weaking: return Math.min(this.capacity.weakenThreadsMax, Math.floor(maxThreads))
+            case WorkType.hacking: return Math.min(this.capacity.hackThreadsMax, Math.floor(maxThreads)); break
+            case WorkType.growing: return Math.min(this.capacity.growThreadsMax, Math.floor(maxThreads)); break
+            case WorkType.weaking: return Math.min(this.capacity.weakenThreadsMax, Math.floor(maxThreads)); break
             default: return undefined
         }
     }
 
     private allocateThreads(type: WorkType, threads: number): void {
         switch(type) {
-            case WorkType.hacking: this.capacity.hackThreadsMax -= threads
-            case WorkType.growing: this.capacity.growThreadsMax -= threads
-            case WorkType.weaking: this.capacity.weakenThreadsMax -= threads
+            case WorkType.hacking: this.capacity.hackThreadsMax -= threads; break
+            case WorkType.growing: this.capacity.growThreadsMax -= threads; break
+            case WorkType.weaking: this.capacity.weakenThreadsMax -= threads; break
         }
     }
 
     private scriptName(type: WorkType): string {
         switch(type) {
-            case WorkType.hacking: return workerHack
-            case WorkType.growing: return workerGrow
-            case WorkType.weaking: return workerWeaken
+            case WorkType.hacking: return workerHack; break
+            case WorkType.growing: return workerGrow; break
+            case WorkType.weaking: return workerWeaken; break
             default: return ""
         }
     }
