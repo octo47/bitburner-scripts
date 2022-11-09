@@ -5,7 +5,7 @@ import { Grow, Hack, Weaken } from 'coordinate/types.js'
 import { words } from 'lodash'
 
 
-const debug = false
+const debug = true
 
 export class Coordinator {
     
@@ -38,11 +38,9 @@ export class Coordinator {
         })
 
         inOrder.sort((a, b) => b.earnings - a.earnings)
-        if (debug) {
-            console.log({
-                growing: inOrder
-            })
-        }
+        console.log({
+            growing: inOrder
+        })
 
 
         for (let idx = 0; idx < inOrder.length; idx++) {
@@ -89,11 +87,9 @@ export class Coordinator {
         })
 
         inOrder.sort((a, b) => b.earnings - a.earnings)
-        if (debug) {
-            console.log({
-                hacking: inOrder
-            })
-        }
+        console.log({
+            hacking: inOrder
+        })
 
 
         for (let idx = 0; idx < inOrder.length; idx++) {
@@ -122,7 +118,7 @@ export class Coordinator {
         .map((target) => {
             const weakenAmount = ns.getServerSecurityLevel(target.hostname) - ns.getServerMinSecurityLevel(target.hostname)
             const weakenThreads = Math.ceil(weakenAmount / weakenDecrese)
-            const weakenTime = ns.getWeakenTime(target.hostname) * weakenThreads / 1000 / 60
+            const weakenTime = ns.getWeakenTime(target.hostname) / 1000 / 60
             const security = [
                 ns.getServerMinSecurityLevel(target.hostname),
                 ns.getServerSecurityLevel(target.hostname)
@@ -136,13 +132,11 @@ export class Coordinator {
             } as Weaken
         })
 
-        inOrder.sort((a, b) => a.threads - b.threads)
+        inOrder.sort((a, b) => a.time - b.time)
 
-        if (debug) {
-            console.log({
-                weaken: inOrder
-            })
-        }
+        console.log({
+            weaken: inOrder
+        })
 
         for (let idx = 0; idx < inOrder.length; idx++) {
             const weaken = inOrder[idx]

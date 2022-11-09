@@ -6,7 +6,7 @@ export async function main(ns : NS) : Promise<void> {
     ns.disableLog('sleep')
 
     while (true) {
-        await ns.hack(hostname)     
+        await ns.weaken(hostname)     
     }
 
 }
