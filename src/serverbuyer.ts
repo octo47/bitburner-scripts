@@ -5,7 +5,7 @@ export async function main(ns: NS): Promise<void> {
     ns.disableLog("getServerMoneyAvailable")
     ns.disableLog("sleep")
 
-    const baseName = "z_"
+    const baseName = "~rig"
     let multi = 2 // assumes you need up to 8gb for your hack and distro script. you may be able to lower this accordingly.
 
     const servers = ns.getPurchasedServers()
