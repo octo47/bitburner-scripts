@@ -109,7 +109,7 @@ export class Coordinator {
 
         const eligable = targets.filter((target) => {
             return target.moneyMax > 0 && 
-               ns.getServerSecurityLevel(target.hostname) > ns.getServerMinSecurityLevel(target.hostname)
+               ns.getServerSecurityLevel(target.hostname) > ns.getServerMinSecurityLevel(target.hostname) * 1.15
         })
 
         const weakenDecrese = ns.weakenAnalyze(1)

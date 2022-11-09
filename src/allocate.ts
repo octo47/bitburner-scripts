@@ -7,6 +7,6 @@ export async function main(ns : NS) : Promise<void> {
     ns.disableLog("sleep")
     while(true) {
         await coordinator.runAllocations(ns)
-        await ns.sleep(120000)
+        await ns.sleep(60000)
     }
 }
