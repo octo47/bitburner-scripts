@@ -48,7 +48,9 @@ export class Allocator {
         }
         //console.log("Allocating %s for %s: maxThreads=%d => %d", this.scriptName(type), target, maxThreads, toAllocate)
 
-        for (const entry of Array.from(this.capacity.workers.entries())) {
+        const workerEntries =  Array.from(this.capacity.workers.entries())
+        workerEntries.sort((a, b) => a[0].localeCompare(b[0]))
+        for (const entry of workerEntries) {
             const hostname = entry[0]
             const available = entry[1]
             
@@ -58,7 +60,7 @@ export class Allocator {
 
             const allocated = Math.min(available, toAllocate)
             const leftover = available - allocated
-            if (leftover > 0) {
+            if (leftover > 2) {
                 this.capacity.workers.set(hostname, leftover)
             } else {
                 this.capacity.workers.delete(hostname)
@@ -78,21 +80,12 @@ export class Allocator {
         return allocations
     }
 
-    private availableThreads(type: WorkType, maxThreads: number): number | undefined {
-        switch(type) {
-            case WorkType.hacking: return Math.min(this.capacity.hackThreadsMax, Math.floor(maxThreads)); break
-            case WorkType.growing: return Math.min(this.capacity.growThreadsMax, Math.floor(maxThreads)); break
-            case WorkType.weaking: return Math.min(this.capacity.weakenThreadsMax, Math.floor(maxThreads)); break
-            default: return undefined
-        }
+    private availableThreads(type: WorkType, maxThreads: number): number {
+        return Math.floor(Math.min(this.capacity.totalThreads, maxThreads))
     }
 
     private allocateThreads(type: WorkType, threads: number): void {
-        switch(type) {
-            case WorkType.hacking: this.capacity.hackThreadsMax -= threads; break
-            case WorkType.growing: this.capacity.growThreadsMax -= threads; break
-            case WorkType.weaking: this.capacity.weakenThreadsMax -= threads; break
-        }
+        this.capacity.totalThreads -= threads
     }
 
     private scriptName(type: WorkType): string {

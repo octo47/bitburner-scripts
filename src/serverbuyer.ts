@@ -2,9 +2,11 @@ import { NS } from "../NetscriptDefinitions"
 import { Queue } from "./lib/queue"
 
 export async function main(ns: NS): Promise<void> {
-    const baseName = "ahb"
+    ns.disableLog("getServerMoneyAvailable")
+    ns.disableLog("sleep")
+
+    const baseName = "z_"
     let multi = 2 // assumes you need up to 8gb for your hack and distro script. you may be able to lower this accordingly.
-    const hackScript = "breach.ns"
 
     const servers = ns.getPurchasedServers()
     if (servers.length > 0) {
@@ -53,10 +55,12 @@ export async function main(ns: NS): Promise<void> {
         else if (count < ns.getPurchasedServerLimit() && cash >= cost) {
             const name = baseName + nameCounter
             nameCounter++
-            console.log("purchasing " + name)
             const newBox = ns.purchaseServer(name, ram)
+            console.log({
+                purchased: name,
+                server: ns.getServer(newBox)
+            })
             queue.push(newBox)
-            ns.run(hackScript, 1, newBox)
         }
 
         await ns.asleep(1000)

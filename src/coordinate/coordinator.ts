@@ -1,9 +1,11 @@
-import { NS, Server } from '@ns'
+import { NS, ProcessInfo, Server } from '@ns'
 import { Scanner } from 'lib/scanner.js'
 import { Allocator, Allocation, WorkType } from 'coordinate/allocator.js'
 import { Grow, Hack, Weaken } from 'coordinate/types.js'
 import { words } from 'lodash'
 
+
+const debug = false
 
 export class Coordinator {
     
@@ -11,9 +13,9 @@ export class Coordinator {
 
         const allocations: Allocation[] = []
 
-        const eligable = targets.filter((server) => server.moneyMax > 0 && server.moneyAvailable < server.moneyMax*0.9)
-
-        //console.log("Allocate growing: %s", eligable.map((elem) => elem.hostname).join(","))
+        const eligable = targets.filter((target) => target.moneyMax > 0 &&
+        target.moneyAvailable < target.moneyMax &&
+            ns.getServerSecurityLevel(target.hostname) < ns.getServerMinSecurityLevel(target.hostname) * 1.05)
 
         const inOrder = eligable.map((target) => {
             const earning = target.moneyMax - target.moneyAvailable
@@ -36,6 +38,12 @@ export class Coordinator {
         })
 
         inOrder.sort((a, b) => b.earnings - a.earnings)
+        if (debug) {
+            console.log({
+                growing: inOrder
+            })
+        }
+
 
         for (let idx = 0; idx < inOrder.length; idx++) {
             const grow = inOrder[idx]
@@ -54,10 +62,8 @@ export class Coordinator {
 
         const eligable = targets.filter((target) => {
             return target.moneyMax > 0 && 
-                ns.hackAnalyze(target.hostname) > 0
+                target.moneyAvailable > target.moneyMax * 0.95
         })
-
-        //console.log("Allocate hacking: %s", eligable.map((elem) => elem.hostname).join(","))
 
         const inOrder = eligable
         .map((target) => {
@@ -83,6 +89,12 @@ export class Coordinator {
         })
 
         inOrder.sort((a, b) => b.earnings - a.earnings)
+        if (debug) {
+            console.log({
+                hacking: inOrder
+            })
+        }
+
 
         for (let idx = 0; idx < inOrder.length; idx++) {
             const hack = inOrder[idx]
@@ -109,9 +121,8 @@ export class Coordinator {
         const inOrder = eligable
         .map((target) => {
             const weakenAmount = ns.getServerSecurityLevel(target.hostname) - ns.getServerMinSecurityLevel(target.hostname)
-            const weakenThreads = weakenAmount / weakenDecrese
-            const weakenTime = ns.getWeakenTime(target.hostname)
-            const weakenPerMinute = weakenAmount / weakenTime
+            const weakenThreads = Math.ceil(weakenAmount / weakenDecrese)
+            const weakenTime = ns.getWeakenTime(target.hostname) * weakenThreads / 1000 / 60
             const security = [
                 ns.getServerMinSecurityLevel(target.hostname),
                 ns.getServerSecurityLevel(target.hostname)
@@ -121,12 +132,17 @@ export class Coordinator {
                 amount: weakenAmount,
                 threads: weakenThreads,
                 time: weakenTime,
-                perMinue: weakenPerMinute,
                 security: security
             } as Weaken
         })
 
-        inOrder.sort((a, b) => b.amount - a.amount)
+        inOrder.sort((a, b) => a.threads - b.threads)
+
+        if (debug) {
+            console.log({
+                weaken: inOrder
+            })
+        }
 
         for (let idx = 0; idx < inOrder.length; idx++) {
             const weaken = inOrder[idx]
@@ -145,14 +161,23 @@ export class Coordinator {
         let toKill = await ns.ps(worker)
         const startable: Allocation[] = []
 
+        scripts.sort((a, b) => a.worker.localeCompare(b.worker))
+
+        if (debug) {
+            console.log({
+                allocations: scripts,
+                ps: toKill
+            })
+        }
+
         for (let i = 0; i < scripts.length; i++) {
             const g = scripts[i]
-            const running = toKill.find((proc) => proc.filename === g.script)
+            const running = toKill.find((proc) => { return proc.filename === g.script && proc.args[0] === g.target })
             if (running) {
                 if (running.filename === g.script && 
                     running.args[0] === g.target && 
                     running.threads === g.threads) {
-                    toKill = toKill.filter((proc) => proc.filename !== g.script)
+                    toKill = toKill.filter((proc) => proc.pid !== running.pid)
                 } else {
                     startable.push(g)
                 }
@@ -162,8 +187,7 @@ export class Coordinator {
         }
 
         for (let i = 0; i < toKill.length; i++) {
-            console.log("%s killing %s", worker, toKill[i].filename)
-            await ns.scriptKill(toKill[i].filename, worker)
+            await this.killProcess(ns, worker, toKill[i])
         }
 
         for (let i = 0; i < startable.length; i++) {
@@ -173,6 +197,7 @@ export class Coordinator {
             console.log({
                 "action": "started",
                 "worker": g.worker,
+                "target": g.target,
                 "started": g.script,
                 "threads": g.threads
             })    
@@ -192,11 +217,13 @@ export class Coordinator {
  
         const allocations: Allocation[] = []
 
-        this.allocateGrowing(ns, allocator, targets).forEach((elem) => allocations.push(elem))
         this.allocateHack(ns, allocator, targets).forEach((elem) => allocations.push(elem))
+        this.allocateGrowing(ns, allocator, targets).forEach((elem) => allocations.push(elem))
         this.allocateWeaken(ns, allocator, targets).forEach((elem) => allocations.push(elem))
 
-        const byWorker: Map<string, Allocation[]> = new Map()
+        const byWorker: Map<string, Allocation[]> = new Map()        
+
+        allocations.sort((a, b) => a.worker.localeCompare(b.worker))
 
         allocations.forEach((alloc) => {
             const items = byWorker.get(alloc.worker) ?? []
@@ -204,10 +231,24 @@ export class Coordinator {
             byWorker.set(alloc.worker, items)
         })
 
+        if (debug) {
+            console.log(byWorker)
+        }
+
         for (const entry of Array.from(byWorker.entries())) {
             const worker = entry[0]
             const allocations = entry[1]
             await this.runAllocationsOnWorker(ns, worker, allocations)
+        }
+    }
+
+    async killProcess(ns: NS, worker: string, ps: ProcessInfo): Promise<void>{
+        console.log("%s killing %s %d", worker, ps.filename,  ps.pid)
+
+        ns.kill(ps.filename, worker, ...ps.args)
+
+        while (ns.getRunningScript(ps.pid, worker, ...ps.args)) {
+            await ns.sleep(100)
         }
     }
 }
