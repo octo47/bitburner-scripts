@@ -1,15 +1,15 @@
-import { NS, ProcessInfo, Server } from '@ns'
+import { NS, Server } from '@ns'
 import { Scanner } from 'lib/scanner.js'
 import { Allocator, Allocation, WorkType } from 'coordinate/allocator.js'
 import { Grow, Hack, Weaken } from 'coordinate/types.js'
+import { killProcess, makeid } from '/lib/process.js'
+
 
 
 const debug = false
 
 export class Coordinator {
     
-    timeSlot = 600000 // 1 minute == 60000ms
-
     allocateGrowing(ns: NS, allocator: Allocator, targets: Server[]): Allocation[] {
 
         const allocations: Allocation[] = []
@@ -20,23 +20,21 @@ export class Coordinator {
 
         const inOrder = eligable.map((target) => {
             const growTime = ns.getGrowTime(target.hostname)
-            const rounds = Math.floor(this.timeSlot/ growTime)
             const coeff = target.moneyMax/target.moneyAvailable
             let threads: number
             if (coeff < 2) {
                 const threadsToDouble = ns.growthAnalyze(target.hostname, 2)
-                threads = Math.floor(threadsToDouble * coeff/2.0) / rounds
+                threads = Math.floor(threadsToDouble * coeff/2.0)
             } else {
-                threads = Math.floor(ns.growthAnalyze(target.hostname, coeff)) / rounds
+                threads = Math.floor(ns.growthAnalyze(target.hostname, coeff))
             }
             
             return {
                 hostname: target.hostname,
                 time: growTime,
-                rounds: rounds,
-                threads: Math.ceil(threads),
+                threads: Math.floor(threads),
             } as Grow
-        }).filter((el) => el.rounds > 0)
+        }).filter((elem) => elem.threads > 0)
 
         inOrder.sort((a, b) => a.threads - b.threads)
         console.log({
@@ -67,10 +65,9 @@ export class Coordinator {
         const inOrder = eligable
         .map((target) => {
             const hackTime = ns.getHackTime(target.hostname)
-            const rounds = Math.floor(this.timeSlot / hackTime)
 
             const hackFraction = ns.hackAnalyze(target.hostname)
-            const hackThreads = 0.5 / hackFraction / rounds
+            const hackThreads = 0.5 / hackFraction
             const hackAmount = target.moneyAvailable * hackFraction * hackThreads
             
             const earnings = hackAmount / hackTime
@@ -81,18 +78,16 @@ export class Coordinator {
             return { 
                 hostname: target.hostname,
                 earnings: earnings,
-                threads: Math.ceil(hackThreads),
+                threads: Math.floor(hackThreads),
                 time: hackTime,
-                rounds: rounds,
                 security: security
             } as Hack
-        }).filter((el) => el.rounds > 0)
+        }).filter((elem) => elem.threads > 0)
 
         inOrder.sort((a, b) => b.earnings - a.earnings)
         console.log({
             hacking: inOrder
         })
-
 
         for (let idx = 0; idx < inOrder.length; idx++) {
             const hack = inOrder[idx]
@@ -119,9 +114,8 @@ export class Coordinator {
         const inOrder = eligable
         .map((target) => {
             const weakenTime = ns.getWeakenTime(target.hostname)
-            const rounds = Math.floor(this.timeSlot/ weakenTime)
             const weakenAmount = ns.getServerSecurityLevel(target.hostname) - ns.getServerMinSecurityLevel(target.hostname)
-            const weakenThreads = Math.ceil(weakenAmount / weakenDecrese / rounds)
+            const weakenThreads = Math.ceil(weakenAmount / weakenDecrese)
             const security = [
                 ns.getServerMinSecurityLevel(target.hostname),
                 ns.getServerSecurityLevel(target.hostname)
@@ -129,12 +123,11 @@ export class Coordinator {
              return { 
                 hostname: target.hostname,
                 amount: weakenAmount,
-                threads: Math.ceil(weakenThreads),
+                threads: Math.floor(weakenThreads),
                 time: weakenTime,
-                rounds: rounds,
                 security: security
             } as Weaken
-        }).filter((el) => el.rounds > 0)
+        }).filter((elem) => elem.threads > 0)
 
         inOrder.sort((a, b) => a.time - b.time)
 
@@ -156,8 +149,13 @@ export class Coordinator {
 
     async runAllocationsOnWorker(ns: NS, worker: string, scripts: Allocation[]): Promise<void> {
 
-        let toKill = await ns.ps(worker)
-        const startable: Allocation[] = []
+        const allocID = makeid(10)
+
+        const toKill = Array.from(await ns.ps(worker)
+            .filter((elem) => !elem.filename.endsWith("_once.js")))
+        for (let i = 0; i < toKill.length; i++) {
+            await killProcess(ns, worker, toKill[i])
+        }
 
         scripts.sort((a, b) => a.worker.localeCompare(b.worker))
 
@@ -170,30 +168,13 @@ export class Coordinator {
 
         for (let i = 0; i < scripts.length; i++) {
             const g = scripts[i]
-            const running = toKill.find((proc) => { return proc.filename === g.script && proc.args[0] === g.target })
-            if (running) {
-                if (running.filename === g.script && 
-                    running.args[0] === g.target && 
-                    running.threads === g.threads) {
-                    toKill = toKill.filter((proc) => proc.pid !== running.pid)
-                } else {
-                    startable.push(g)
-                }
-            } else {
-                startable.push(g)
-            }
-        }
-
-        for (let i = 0; i < toKill.length; i++) {
-            await this.killProcess(ns, worker, toKill[i])
-        }
-
-        for (let i = 0; i < startable.length; i++) {
-            const g = startable[i]
             await ns.scp(g.script, g.worker)
-            await ns.exec(g.script, g.worker, g.threads, g.target)
+            let result = "started"
+            if (!await ns.exec(g.script, g.worker, g.threads, g.target, allocID)) {
+                result = "failed"
+            }
             console.log({
-                "action": "started",
+                "action": result,
                 "worker": g.worker,
                 "target": g.target,
                 "started": g.script,
@@ -213,6 +194,17 @@ export class Coordinator {
 
         const allocator = new Allocator(ns, servers)
  
+
+        if (debug) {
+            console.log({
+                capacity: JSON.stringify(allocator.capacity),
+                workers: Array.from(allocator.capacity.workers.keys())
+            })    
+        }
+        
+        if (allocator.capacity.totalThreads < 1) {
+            return
+        }
         const allocations: Allocation[] = []
 
         this.allocateHack(ns, allocator, targets).forEach((elem) => allocations.push(elem))
@@ -237,16 +229,6 @@ export class Coordinator {
             const worker = entry[0]
             const allocations = entry[1]
             await this.runAllocationsOnWorker(ns, worker, allocations)
-        }
-    }
-
-    async killProcess(ns: NS, worker: string, ps: ProcessInfo): Promise<void>{
-        console.log("%s killing %s %d", worker, ps.filename,  ps.pid)
-
-        ns.kill(ps.filename, worker, ...ps.args)
-
-        while (ns.getRunningScript(ps.pid, worker, ...ps.args)) {
-            await ns.sleep(100)
         }
     }
 }

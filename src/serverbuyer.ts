@@ -14,6 +14,11 @@ export async function main(ns: NS): Promise<void> {
         while (Math.pow(2, multi) < maxRam) multi++
     }
 
+    console.log({
+        multi:multi,
+        servers: servers
+    })
+
     const queue = new Queue<string>()
     for (let i = 0; i < servers.length; i++) {
         queue.push(servers[i])

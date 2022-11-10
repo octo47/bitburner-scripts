@@ -3,7 +3,6 @@ export interface Grow {
     hostname: string;
     threads: number;
     time: number;
-    rounds: number;
 }
 
 export interface Hack {
@@ -11,7 +10,6 @@ export interface Hack {
     earnings: number;
     threads: number;
     time: number;
-    rounds: number;
     security: number[];
 }
 
@@ -20,7 +18,6 @@ export interface Weaken {
     amount: number;
     threads: number;
     time: number;
-    rounds: number;
     security: number[];
 }
 

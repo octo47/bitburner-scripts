@@ -10,9 +10,12 @@ export class Capacity {
         const scriptRam = 1.8
         servers.forEach((worker) => {
             if (worker.hasAdminRights && worker.maxRam > 0) {
-                const threads = Math.floor(worker.maxRam / scriptRam)
-                this.workers.set(worker.hostname, threads)
-                this.totalThreads += threads
+                const ramAvail = worker.maxRam - worker.ramUsed
+                const threads = Math.floor(ramAvail / scriptRam)
+                if (threads > 0) {
+                    this.workers.set(worker.hostname, threads)
+                    this.totalThreads += threads
+                }
             }
         })
     }

@@ -15,9 +15,9 @@ export interface Allocation {
     threads: number;
 }
 
-const workerGrow = "/worker/grow.js"
-const workerHack = "/worker/hack.js"
-const workerWeaken = "/worker/weaken.js"
+const workerGrow = "/worker/grow_once.js"
+const workerHack = "/worker/hack_once.js"
+const workerWeaken = "/worker/weaken_once.js"
 
 
 export class Allocator {
@@ -47,7 +47,7 @@ export class Allocator {
             return allocations
         }
         //console.log("Allocating %s for %s: maxThreads=%d => %d", this.scriptName(type), target, maxThreads, toAllocate)
-
+        
         const workerEntries =  Array.from(this.capacity.workers.entries())
         workerEntries.sort((a, b) => a[0].localeCompare(b[0]))
         for (const entry of workerEntries) {

@@ -21,9 +21,9 @@ export async function main(ns : NS) : Promise<void> {
             const server = ns.getServer(hostPath.hostname)
 
             if (server.requiredHackingSkill > hackingLevel) {
-                console.log("%s TOO WEAK: %d < %d", 
-                    server.hostname, hackingLevel, 
-                    server.requiredHackingSkill)
+                // console.log("%s TOO WEAK: %d < %d", 
+                //     server.hostname, hackingLevel, 
+                //     server.requiredHackingSkill)
                 continue
             }
 
