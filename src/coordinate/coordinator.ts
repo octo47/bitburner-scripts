@@ -4,10 +4,12 @@ import { Allocator, Allocation, WorkType } from 'coordinate/allocator.js'
 import { Grow, Hack, Weaken } from 'coordinate/types.js'
 
 
-const debug = true
+const debug = false
 
 export class Coordinator {
     
+    timeSlot = 600000 // 1 minute == 60000ms
+
     allocateGrowing(ns: NS, allocator: Allocator, targets: Server[]): Allocation[] {
 
         const allocations: Allocation[] = []
@@ -17,24 +19,24 @@ export class Coordinator {
             ns.getServerSecurityLevel(target.hostname) < ns.getServerMinSecurityLevel(target.hostname) * 1.05)
 
         const inOrder = eligable.map((target) => {
-            const earning = target.moneyMax - target.moneyAvailable
+            const growTime = ns.getGrowTime(target.hostname)
+            const rounds = Math.floor(this.timeSlot/ growTime)
             const coeff = target.moneyMax/target.moneyAvailable
             let threads: number
             if (coeff < 2) {
                 const threadsToDouble = ns.growthAnalyze(target.hostname, 2)
-                threads = Math.floor(threadsToDouble * coeff/2.0)
+                threads = Math.floor(threadsToDouble * coeff/2.0) / rounds
             } else {
-                threads = Math.floor(ns.growthAnalyze(target.hostname, coeff))
+                threads = Math.floor(ns.growthAnalyze(target.hostname, coeff)) / rounds
             }
-            const growTime = ns.getGrowTime(target.hostname) / 1000 / 60
-            const earnings = earning / growTime 
+            
             return {
                 hostname: target.hostname,
-                growTime: growTime,
-                earnings: earnings,
-                threads: threads
+                time: growTime,
+                rounds: rounds,
+                threads: Math.ceil(threads),
             } as Grow
-        })
+        }).filter((el) => el.rounds > 0)
 
         inOrder.sort((a, b) => a.threads - b.threads)
         console.log({
@@ -64,11 +66,13 @@ export class Coordinator {
 
         const inOrder = eligable
         .map((target) => {
+            const hackTime = ns.getHackTime(target.hostname)
+            const rounds = Math.floor(this.timeSlot / hackTime)
+
             const hackFraction = ns.hackAnalyze(target.hostname)
-            const hackThreads = 0.5 / hackFraction
+            const hackThreads = 0.5 / hackFraction / rounds
             const hackAmount = target.moneyAvailable * hackFraction * hackThreads
             
-            const hackTime = ns.getHackTime(target.hostname)/1000/60
             const earnings = hackAmount / hackTime
             const security = [
                 ns.getServerMinSecurityLevel(target.hostname),
@@ -77,13 +81,12 @@ export class Coordinator {
             return { 
                 hostname: target.hostname,
                 earnings: earnings,
-                hackFraction: hackFraction,
-                hackThreads: hackThreads,
-                hackAmount: hackAmount,
-                hackTime: hackTime,
+                threads: Math.ceil(hackThreads),
+                time: hackTime,
+                rounds: rounds,
                 security: security
             } as Hack
-        })
+        }).filter((el) => el.rounds > 0)
 
         inOrder.sort((a, b) => b.earnings - a.earnings)
         console.log({
@@ -93,7 +96,7 @@ export class Coordinator {
 
         for (let idx = 0; idx < inOrder.length; idx++) {
             const hack = inOrder[idx]
-            const allocated = allocator.allocate(WorkType.hacking, hack.hackThreads, hack.hostname)
+            const allocated = allocator.allocate(WorkType.hacking, hack.threads, hack.hostname)
             if(allocated.length == 0) {
                 break
             }
@@ -115,9 +118,10 @@ export class Coordinator {
 
         const inOrder = eligable
         .map((target) => {
+            const weakenTime = ns.getWeakenTime(target.hostname)
+            const rounds = Math.floor(this.timeSlot/ weakenTime)
             const weakenAmount = ns.getServerSecurityLevel(target.hostname) - ns.getServerMinSecurityLevel(target.hostname)
-            const weakenThreads = Math.ceil(weakenAmount / weakenDecrese)
-            const weakenTime = ns.getWeakenTime(target.hostname) / 1000 / 60
+            const weakenThreads = Math.ceil(weakenAmount / weakenDecrese / rounds)
             const security = [
                 ns.getServerMinSecurityLevel(target.hostname),
                 ns.getServerSecurityLevel(target.hostname)
@@ -125,11 +129,12 @@ export class Coordinator {
              return { 
                 hostname: target.hostname,
                 amount: weakenAmount,
-                threads: weakenThreads,
+                threads: Math.ceil(weakenThreads),
                 time: weakenTime,
+                rounds: rounds,
                 security: security
             } as Weaken
-        })
+        }).filter((el) => el.rounds > 0)
 
         inOrder.sort((a, b) => a.time - b.time)
 

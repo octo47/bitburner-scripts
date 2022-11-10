@@ -5,7 +5,7 @@ export async function main(ns: NS): Promise<void> {
     ns.disableLog("getServerMoneyAvailable")
     ns.disableLog("sleep")
 
-    const baseName = "~rig"
+    const baseName = "π-"
     let multi = 2 // assumes you need up to 8gb for your hack and distro script. you may be able to lower this accordingly.
 
     const servers = ns.getPurchasedServers()
@@ -53,7 +53,7 @@ export async function main(ns: NS): Promise<void> {
             }
         }
         else if (count < ns.getPurchasedServerLimit() && cash >= cost) {
-            const name = baseName + nameCounter
+            const name = baseName + pad(nameCounter, 8)
             nameCounter++
             const newBox = ns.purchaseServer(name, ram)
             console.log({
@@ -65,4 +65,11 @@ export async function main(ns: NS): Promise<void> {
 
         await ns.asleep(1000)
     }
+
 }
+
+function pad(num: number, size: number): string {
+    const s = "000000000" + num
+    return s.substr(s.length-size)
+}
+

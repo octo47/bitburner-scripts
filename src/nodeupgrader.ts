@@ -14,7 +14,7 @@ export async function main(ns : NS) : Promise<void> {
     const nodes = 30
     const cores = 8
     const ram = 8
-    const level = 80
+    const level = 120
     
     
     while(true) {
