@@ -151,20 +151,23 @@ export class Coordinator {
 
         const allocID = makeid(10)
 
-        const toKill = Array.from(await ns.ps(worker)
-            .filter((elem) => !elem.filename.endsWith("_once.js")))
-        for (let i = 0; i < toKill.length; i++) {
-            await killProcess(ns, worker, toKill[i])
-        }
-
         scripts.sort((a, b) => a.worker.localeCompare(b.worker))
 
-        if (debug) {
-            console.log({
-                allocations: scripts,
-                ps: toKill
-            })
+        if (worker !== "home") {
+            const toKill = Array.from(await ns.ps(worker)
+                .filter((elem) => !elem.filename.endsWith("_once.js")))
+            for (let i = 0; i < toKill.length; i++) {
+                await killProcess(ns, worker, toKill[i])
+            }
+
+            if (debug) {
+                console.log({
+                    allocations: scripts,
+                    ps: toKill
+                })
+            }
         }
+
 
         for (let i = 0; i < scripts.length; i++) {
             const g = scripts[i]

@@ -1,5 +1,7 @@
 import { NS, Server } from '@ns'
 
+const homeReserve = 128
+
 export class Capacity {
     totalThreads: number;
 
@@ -18,5 +20,11 @@ export class Capacity {
                 }
             }
         })
+        const home = ns.getServer(ns.getHostname())
+        const homeRamAvail = home.maxRam - home.ramUsed - homeReserve
+        const threads = Math.floor(homeRamAvail / scriptRam)
+        if (threads > homeReserve) {
+            this.workers.set(home.hostname, threads)
+        }
     }
 }
