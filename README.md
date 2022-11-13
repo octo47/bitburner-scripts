@@ -38,6 +38,16 @@ To buy more servers `run_serverbuyer.ts` can be used. It will try to buy and max
 
 Hackned nodes can be constantly upgraded as well with `run_nodeupgrader.ts`. Do not recommend to run it in early stages as it a waste of money. As soon as you can get coordinator running - it will be much better in terms of money.
 
+## Infiltration
+
+Script `infiltration.js` is exactly for this. It runs in a background and waits until you start to inflitrate. It will automatically accomplish all the tasks.
+
+```
+alias inf="home ; run infiltration.js --status"
+alias infon="home ; run infiltration.js --start"
+alias infoff="home ; run infiltration.js --stop" 
+```
+
 ## Deugging
 
 For debugging bitburner on Steam you will need to enable a remote debugging port. This can be done by rightclicking bitburner in your Steam library and selecting properties. There you need to add `--remote-debugging-port=9222` [Thanks @DarkMio]
