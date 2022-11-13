@@ -232,7 +232,7 @@ module.exports = {
     "no-spaced-func": ["off"],
     "no-sparse-arrays": ["error"],
     "no-sync": ["error"],
-    "no-tabs": ["error"],
+    "no-tabs": ["off"],
     "no-template-curly-in-string": ["error"],
     "no-ternary": ["off"],
     "no-this-before-super": ["off"],

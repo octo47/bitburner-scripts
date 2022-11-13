@@ -12,10 +12,9 @@ export async function main(ns : NS) : Promise<void> {
     const hacknet = ns.hacknet
 
     const nodes = 30
-    const cores = 8
-    const ram = 8
-    const level = 120
-    
+    const cores = 16
+    const ram = 64
+    const level = 200    
     
     while(true) {
         while(hacknet.numNodes() < nodes) {

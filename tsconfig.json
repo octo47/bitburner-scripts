@@ -4,6 +4,8 @@
     "src/**/*",
   ],
   "compilerOptions": {
+    "allowJs": true,
+    "lib": ["es5", "es6", "dom"],
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "node",
