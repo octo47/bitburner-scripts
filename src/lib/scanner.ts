@@ -11,7 +11,7 @@ export class Scanner {
         const visited = new Set<string>()
         const hosts: HostData[] = []
 
-        toScan.pushAll(ns.scan("home").map(host => new HostData(host, [], false, false)))
+        toScan.pushAll(ns.scan("home").map(host => new HostData(host, [], false, false, false)))
 
         do {
             const nextHost = toScan.pop()
@@ -26,6 +26,7 @@ export class Scanner {
             const server = ns.getServer(nextHost.hostname)
             nextHost.hacked = server.hasAdminRights
             nextHost.owned = server.purchasedByPlayer
+            nextHost.backdoor = server.backdoorInstalled
             hosts.push(nextHost)
     
             const scanned = ns.scan(server.hostname)
@@ -34,6 +35,7 @@ export class Scanner {
                     elem, 
                     nextHost.path.concat([nextHost.hostname]),
                     false, 
+                    false,
                     false)
             }))
         } while (!toScan.isEmpty())
