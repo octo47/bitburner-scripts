@@ -1,6 +1,6 @@
 import { NS } from '@ns'
-import { killAll } from './lib/process'
-import { Scanner } from './lib/scanner'
+import { killAll } from 'lib/process'
+import { Scanner } from 'lib/scanner'
 
 export async function main(ns : NS) : Promise<void> {
     

@@ -1,7 +1,7 @@
 import { NS } from '@ns'
-import { HostData } from './lib/hostdata'
-import { Scanner } from './lib/scanner'
-import { executeTerminal } from './lib/terminal'
+import { HostData } from 'lib/hostdata'
+import { Scanner } from 'lib/scanner'
+import { executeTerminal } from 'lib/terminal'
 
 export async function main(ns : NS) : Promise<void> {
     const hosts = new Scanner().scan(ns)

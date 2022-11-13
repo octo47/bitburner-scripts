@@ -1,6 +1,6 @@
 import { NS, Server } from '@ns'
-import { Capacity } from './coordinate/capacity'
-import { Scanner } from '/lib/scanner.js'
+import { Capacity } from 'coordinate/capacity'
+import { Scanner } from 'lib/scanner.js'
 
 export async function main(ns : NS) : Promise<void> {
 
