@@ -78,9 +78,9 @@ export async function main(ns : NS) : Promise<void> {
 
         }
         grows.sort((a, b) => -(a.earnings - b.earnings))
-        grows.forEach((g) => console.log(g))
+        grows.forEach((g) => ns.print(g))
         hacks.sort((a, b) => -(a.earnings - b.earnings))
-        hacks.forEach((g) => console.log(g))
+        hacks.forEach((g) => ns.print(g))
         return []
     }
 

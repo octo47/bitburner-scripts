@@ -14,7 +14,7 @@ export async function main(ns: NS): Promise<void> {
         while (Math.pow(2, multi) < maxRam) multi++
     }
 
-    console.log({
+    ns.print({
         multi:multi,
         servers: servers
     })
@@ -28,7 +28,7 @@ export async function main(ns: NS): Promise<void> {
     const maxRam = Math.pow(2, 20)
     while (true) {
         if (Math.pow(2, multi) >= maxRam) {
-            console.log("maxed on servers, killing process")
+            ns.print("maxed on servers, killing process")
             return
         }
 
@@ -44,14 +44,14 @@ export async function main(ns: NS): Promise<void> {
             }
             
             if (Math.min(maxRam, Math.pow(2, multi)) <= ns.getServerMaxRam(peek)) {
-                console.log("bumping ram multi from " + multi + " to " + (multi + 1))
+                ns.print("bumping ram multi from " + multi + " to " + (multi + 1))
                 multi++
                 continue
             }
             else {
                 const current = queue.pop()
                 if (current) {
-                    console.log("deleting " + current)
+                    ns.print("deleting " + current)
                     ns.killall(current)
                     ns.deleteServer(current)
                 }
@@ -61,7 +61,7 @@ export async function main(ns: NS): Promise<void> {
             const name = baseName + pad(nameCounter, 8)
             nameCounter++
             const newBox = ns.purchaseServer(name, ram)
-            console.log({
+            ns.print({
                 purchased: name,
                 server: ns.getServer(newBox)
             })

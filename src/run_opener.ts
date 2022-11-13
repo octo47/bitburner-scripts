@@ -21,27 +21,27 @@ export async function main(ns : NS) : Promise<void> {
             const server = ns.getServer(hostPath.hostname)
 
             if (server.requiredHackingSkill > hackingLevel) {
-                // console.log("%s TOO WEAK: %d < %d", 
-                //     server.hostname, hackingLevel, 
-                //     server.requiredHackingSkill)
+                ns.printf("%s TOO WEAK: %d < %d", 
+                    server.hostname, hackingLevel, 
+                    server.requiredHackingSkill)
                 continue
             }
 
             if (po.open(server)) {
                 ns.nuke(hostPath.hostname)
                 if (ns.getServer(hostPath.hostname).hasAdminRights) {
-                    console.log("%s succesfully rooted", hostPath.hostname)
+                    ns.printf("%s succesfully rooted", hostPath.hostname)
                     hacked = true
                 }
             } else {
-                console.log("%s failed to open", hostPath.hostname)
+                ns.printf("%s failed to open", hostPath.hostname)
             }
         }
 
         hosts.save(ns)
 
         if (!hacked) {
-            console.log("nothing rooted, sleeping")
+            ns.printf("nothing rooted, sleeping")
             await ns.sleep(60000)
         }
     }

@@ -6,7 +6,7 @@ export async function main(ns : NS) : Promise<void> {
         .filter(name => name.endsWith('.js'))
         .filter(name => name !== 'rm-all.ts')
         .forEach((fname)=>{
-            console.log(fname)
+            ns.tprint(fname)
             ns.rm(fname)
         })
         

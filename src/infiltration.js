@@ -558,7 +558,7 @@ function waitForStart() {
     state.company = title.substr(13);
     state.started = true;
     wrapEventListeners();
-    console.log("Start automatic infiltration of", state.company);
+    ns.tprint("Start automatic infiltration of", state.company);
     btnStart.click();
 }
 /**

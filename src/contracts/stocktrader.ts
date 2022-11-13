@@ -19,14 +19,14 @@ export async function main(ns : NS) : Promise<void> {
 
         if (stocks[ps] < stocks[ps-1]) { // price drop
             total += stocks[ps-1] - buying
-            console.log("drop at %d, [%d, %d] %d ups total to %d", ps, pi, ps-1,  stocks[ps-1] - buying, total)
+            ns.tprintf("drop at %d, [%d, %d] %d ups total to %d", ps, pi, ps-1,  stocks[ps-1] - buying, total)
             pi = ps
             profit = 0
         }
     }
     if (profit > 0) {
         total += profit
-        console.log("last profit [%d, %d] %d ups total to %d", pi, stocks.length-1, profit, total)
+        ns.tprintf("last profit [%d, %d] %d ups total to %d", pi, stocks.length-1, profit, total)
     }
-    console.log("max profit %d", total)
+    ns.tprintf("max profit %d", total)
 }

@@ -37,7 +37,7 @@ export class Coordinator {
         }).filter((elem) => elem.threads > 0)
 
         inOrder.sort((a, b) => a.threads - b.threads)
-        console.log({
+        ns.print({
             growing: inOrder
         })
 
@@ -85,7 +85,7 @@ export class Coordinator {
         }).filter((elem) => elem.threads > 0)
 
         inOrder.sort((a, b) => b.earnings - a.earnings)
-        console.log({
+        ns.print({
             hacking: inOrder
         })
 
@@ -131,7 +131,7 @@ export class Coordinator {
 
         inOrder.sort((a, b) => a.time - b.time)
 
-        console.log({
+        ns.print({
             weaken: inOrder
         })
 
@@ -160,12 +160,10 @@ export class Coordinator {
                 await killProcess(ns, worker, toKill[i])
             }
 
-            if (debug) {
-                console.log({
-                    allocations: scripts,
-                    ps: toKill
-                })
-            }
+            ns.print({
+                allocations: scripts,
+                ps: toKill
+            })
         }
 
 
@@ -176,7 +174,7 @@ export class Coordinator {
             if (!await ns.exec(g.script, g.worker, g.threads, g.target, allocID)) {
                 result = "failed"
             }
-            console.log({
+            ns.print({
                 "action": result,
                 "worker": g.worker,
                 "target": g.target,
@@ -198,12 +196,10 @@ export class Coordinator {
         const allocator = new Allocator(ns, servers)
  
 
-        if (debug) {
-            console.log({
-                capacity: JSON.stringify(allocator.capacity),
-                workers: Array.from(allocator.capacity.workers.keys())
-            })    
-        }
+        ns.print({
+            capacity: JSON.stringify(allocator.capacity),
+            workers: Array.from(allocator.capacity.workers.keys())
+        })    
         
         if (allocator.capacity.totalThreads < 1) {
             return
@@ -225,7 +221,7 @@ export class Coordinator {
         })
 
         if (debug) {
-            console.log(byWorker)
+            ns.print(byWorker)
         }
 
         for (const entry of Array.from(byWorker.entries())) {

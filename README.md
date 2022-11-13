@@ -20,19 +20,19 @@ npm install
 npm run defs
 ```
 
-## How to use this template
-Write all your typescript source code in the `/src` directory
+## How to use scripts
 
-Ensure you are using absolute paths to .js files in your imports or else the game will not recognize your import paths.  
-Example: use `import {} from '/lib/helpers.js'` instead of `import {} from './lib/helpers'` 
+(please note, all scripts are .js in the game and compiled from .ts)
 
-To autocompile as you save, run `npm run watch` in a terminal
+`run_coordinator.ts` starts process of bin-packing nodes with worker tasks. It runs in a loop and assigns threads to work on weak, hack or grow.
+Only eligable targets are considered:
+* for hack only with low security and >95% money
+* for grow only with low security
+* for weaken everything else
 
-To update your Netscript Definitions, run `npm run defs` in a terminal
+Coordinator uses all hosts including home. However will keep a reserve of 128GB at home. Tunable in coordinate/capacity.ts
 
-Press F1 and Select `Bitburner: Enable File Watcher` to enable auto uploading to the game
-
-If you run `watcher.js` in game, the game will automatically detect file changes and restart the associated scripts
+To open new hosts use `run_opener.ts`. This script will periodically scan hosts and try to hack them running port openers if they are available
 
 ## Deugging
 

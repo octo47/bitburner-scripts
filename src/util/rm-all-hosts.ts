@@ -18,7 +18,7 @@ export async function main(ns : NS) : Promise<void> {
             .filter(name => name !== 'rm-all.ts'))
 
         for (let j =0; j < files.length; j++) {
-            console.log({
+            ns.tprint({
                 host: servers[i].hostname,
                 file: files[j]
             })

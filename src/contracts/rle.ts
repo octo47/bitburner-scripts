@@ -16,7 +16,7 @@ export async function main(ns : NS) : Promise<void> {
             output = output.concat(letter)
             counter = 0
             letter = arr[idx]
-            console.log('%s -> %s', arr[idx], output)
+            ns.tprintf('%s -> %s', arr[idx], output)
         }
         if (counter > 8) {
             output = output.concat('' + counter)
@@ -29,5 +29,5 @@ export async function main(ns : NS) : Promise<void> {
         output = output.concat(letter)
     }
 
-    console.log('%s', output)
+    ns.tprintf('%s', output)
 }

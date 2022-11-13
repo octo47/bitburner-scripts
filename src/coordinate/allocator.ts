@@ -22,9 +22,11 @@ const workerWeaken = "/worker/weaken_once.js"
 
 export class Allocator {
 
+    ns: NS
     capacity: Capacity
 
     constructor(ns: NS, workers: Server[]) {
+        this.ns = ns
         this.capacity = new Capacity(ns, workers)
 
     }
@@ -46,7 +48,7 @@ export class Allocator {
         if (!toAllocate) {
             return allocations
         }
-        //console.log("Allocating %s for %s: maxThreads=%d => %d", this.scriptName(type), target, maxThreads, toAllocate)
+        this.ns.printf("Allocating %s for %s: maxThreads=%d => %d", this.scriptName(type), target, maxThreads, toAllocate)
         
         const workerEntries =  Array.from(this.capacity.workers.entries())
         workerEntries.sort((a, b) => a[0].localeCompare(b[0]))
@@ -66,7 +68,7 @@ export class Allocator {
                 this.capacity.workers.delete(hostname)
             }
             toAllocate -= allocated
-            //console.log("Allocating threads for %s on %s: %d, capacity:%s", target, hostname, allocated, JSON.stringify(this.capacity))
+            this.ns.printf("Allocating threads for %s on %s: %d, capacity:%s", target, hostname, allocated, JSON.stringify(this.capacity))
             this.allocateThreads(type, allocated)
 
             allocations.push({

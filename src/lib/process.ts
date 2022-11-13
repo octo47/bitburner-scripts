@@ -1,7 +1,7 @@
 import { NS, ProcessInfo } from '@ns'
 
 export async function killProcess(ns: NS, worker: string, ps: ProcessInfo): Promise<void> {
-    console.log({
+    ns.print({
         acion: "kill", 
         worker: worker, 
         script: ps.filename,  
@@ -16,7 +16,7 @@ export async function killProcess(ns: NS, worker: string, ps: ProcessInfo): Prom
 }
 
 export async function killAll(ns: NS, hostname: string): Promise<void> {
-    console.log({
+    ns.print({
         acion: "killall", 
         hostname: hostname, 
     })
